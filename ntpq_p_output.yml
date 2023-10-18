@@ -1,0 +1,20 @@
+root@ansible:/etc/ansible# cat ntpq_p_output.yml
+- name: ntp output off servers
+  hosts: all
+  gather_facts: yes
+  vars:
+    backup_dir: /root/ntpq_p/
+  tasks:
+  - name: ntp output
+    shell: /sbin/ntpq -p > /tmp/{{ inventory_hostname }}_ntpq_output.txt
+  - name: Copy ntpoutput to Ubuntu server
+    fetch:
+      src: "/tmp/{{ inventory_hostname }}_ntpq_output.txt"
+      dest: "{{ backup_dir }}"
+      flat: yes
+  - name: Remove ntp file
+    file:
+      path: /tmp/{{ inventory_hostname }}_ntpq_output.txt
+      state: absent
+
+root@ansible:/etc/ansible#
