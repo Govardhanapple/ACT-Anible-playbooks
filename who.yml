@@ -1,0 +1,22 @@
+root@ansible:/etc/ansible# cat who.yml
+
+- name: Backup who on servers
+  hosts: arcos
+  gather_facts: yes
+  vars:
+    backup_dir: /root/who_p/
+  tasks:
+  - name: Backup who
+    shell: who > /tmp/{{ inventory_hostname }}_who_{{ ansible_date_time.date }}.txt
+    register: logged_in_users
+
+  - name: Copy who to Ubuntu server
+    fetch:
+      src: "/tmp/{{ inventory_hostname }}_who_{{ ansible_date_time.date }}.txt"
+      dest: "{{ backup_dir }}"
+      flat: yes
+  - name: Remove who file
+    file:
+      path: /tmp/{{ inventory_hostname }}_who_{{ ansible_date_time.date }}.txt
+      state: absent
+root@ansible:/etc/ansible#
