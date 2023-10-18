@@ -1,0 +1,19 @@
+root@ansible:/etc/ansible# cat alepo_df-h.yml
+- name: check mount points
+  hosts: alepo
+  gather_facts: yes
+  vars:
+    backup_dir: /root/df-h_output/
+  tasks:
+  - name: df-h_backup
+    shell: /bin/df -hT > /tmp/{{ inventory_hostname }}_df-h_{{ ansible_date_time.date }}.txt
+  - name: Copy df-h to Ubuntu server
+    fetch:
+      src: "/tmp/{{ inventory_hostname }}_df-h_{{ ansible_date_time.date }}.txt"
+      dest: "{{ backup_dir }}"
+      flat: yes
+  - name: Remove df-h file
+    file:
+      path: /tmp/{{ inventory_hostname }}_df-h_{{ ansible_date_time.date }}.txt
+      state: absent
+root@ansible:/etc/ansible#
