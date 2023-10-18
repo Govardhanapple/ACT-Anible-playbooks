@@ -1,0 +1,21 @@
+root@ansible:/etc/ansible# cat login_check.yml
+---
+- hosts: login
+  gather_facts: no
+  become: yes
+  vars:
+    password: "act@369$"
+  tasks:
+    - name: Check if root can log in
+      shell: |
+        echo "{{password}}" | sudo -S su -c exit
+      register: login_status
+      ignore_errors: true
+    - name: Print login status
+      debug:
+        var: login_status.rc
+    - name: Fail if root cannot log in
+      fail:
+        msg: "Root user cannot log in with the given credentials"
+      when: login_status.rc != 0
+root@ansible:/etc/ansible#
