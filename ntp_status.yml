@@ -1,0 +1,28 @@
+root@ansible:/etc/ansible# cat ntp_status.yml
+---
+- name: Fetch ntpd status from servers
+  hosts: alepo # Replace with the group of servers you want to target
+  gather_facts: yes
+
+  tasks:
+    - name: Get ntpd service status
+      shell: systemctl status ntpd
+      register: ntp_status
+      ignore_errors: yes
+
+    - name: Save ntpd service status to a local file
+      copy:
+        content: "{{ ntp_status.stdout }}"
+        dest: "/tmp/{{ inventory_hostname }}_ntp_status.txt"  # Replace with the desired local file path
+
+    - name: Copy the saved status file to Ansible control machine
+      fetch:
+        src: "/tmp/{{ inventory_hostname }}_ntp_status.txt"
+        dest: "/root/ntpstatus/"
+        flat: yes
+    - name: Remove ntp file
+      file:
+        path: /tmp/{{ inventory_hostname }}_ntp_status.txt
+        state: absent
+
+root@ansible:/etc/ansible#
