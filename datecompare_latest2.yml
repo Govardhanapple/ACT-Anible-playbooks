@@ -1,0 +1,70 @@
+root@ansible:/etc/ansible# cat datecompare_latest2.yml
+---
+- name: Compare server date with Ansible server date
+  hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Get the current date on the Ansible server
+      shell: date +"%s"
+      register: ansible_date
+      delegate_to: localhost
+
+    - name: Get the current date on the remote server
+      shell: date +"%s"
+      register: remote_date
+
+    - name: Calculate the time difference
+      set_fact:
+        time_difference: "{{ ansible_date.stdout | int - remote_date.stdout | int }}"
+
+    - name: Display the result
+      debug:
+        msg: "{{ inventory_hostname }} is not in sync"
+      when: time_difference | int > 300 or time_difference | int < -300
+
+    - name: Display "Sync" Debug Message
+      debug:
+        msg: "{{ inventory_hostname }} is sync"
+      when: (time_difference | int >= -300 and time_difference | int < 0) or (time_difference | int > 0 and time_difference | int <= 300)
+
+    - name: Store the output locally on Ansible control machine (In Sync)
+      copy:
+        content: "{{ inventory_hostname }}: ntp in sync\n"
+        dest: "/tmp/{{ inventory_hostname }}_ntp_in_sync.txt"
+      when: (time_difference | int >= -300 and time_difference | int < 0) or (time_difference | int > 0 and time_difference | int <= 300)
+
+    - name: Store the output locally on Ansible control machine (Not In Sync)
+      copy:
+        content: "{{ inventory_hostname }}: not in sync with a time difference of {{ time_difference }} seconds\n"
+        dest: "/tmp/{{ inventory_hostname }}_ntp_not_in_sync.txt"
+      when: time_difference | int != 0 and (time_difference | int > 300 or time_difference | int < -300)
+    - name: Fetch ntp in sync output file
+      fetch:
+        src: "/tmp/{{ inventory_hostname }}_ntp_in_sync.txt"
+        dest: "/root/datecompare/"
+        flat: yes
+      when: (time_difference | int >= -300 and time_difference | int < 0) or (time_difference | int > 0 and time_difference | int <= 300)
+
+    - name: Fetch ntp not in sync output file
+      fetch:
+        src: "/tmp/{{ inventory_hostname }}_ntp_not_in_sync.txt"
+        dest: "/root/datecompare2/"
+        flat: yes
+      when: time_difference | int != 0 and (time_difference | int > 300 or time_difference | int < -300)
+    - name: Remove ntp in sync output file
+      file:
+        path: "/tmp/{{ inventory_hostname }}_ntp_in_sync.txt"
+        state: absent
+      when: (time_difference | int >= -300 and time_difference | int < 0) or (time_difference | int > 0 and time_difference | int <= 300)
+
+    - name: Remove ntp not in sync output file
+      file:
+        path: "/tmp/{{ inventory_hostname }}_ntp_not_in_sync.txt"
+        state: absent
+      when: time_difference | int != 0 and (time_difference | int > 300 or time_difference | int < -300)
+
+
+
+
+root@ansible:/etc/ansible#
