@@ -1,0 +1,44 @@
+root@ansible:/etc/ansible# cat exclude_ntp_pools.yml
+---
+- name: Add script to ntp.conf
+  hosts: ntptest
+  become: true
+  become_method: sudo
+  vars:
+    ansible_become_password: bgt54rfV
+  tasks:
+    - name: Backup /etc/bash.bashrc
+      copy:
+        src: /etc/ntp.conf
+        dest: /etc/ntp.conf.orginabackup
+
+    - name: Comment out default NTP pools in /etc/ntp.conf
+      lineinfile:
+        path: /etc/ntp.conf
+        regexp: ^pool {{ item }}.ubuntu.pool.ntp.org iburst
+        line: "#pool {{ item }}.ubuntu.pool.ntp.org iburst"
+      with_items:
+        - 0
+        - 1
+        - 2
+        - 3
+    - name: Comment out to ntp.ubuntu.com
+      lineinfile:
+        path: /etc/ntp.conf
+        regexp: ^pool ntp.ubuntu.com
+        line: "#pool ntp.ubuntu.com"
+    - name: Add NTP servers to configuration file
+      lineinfile:
+        path: /etc/ntp.conf
+        line: "{{ item }}"
+        insertafter: EOF
+      with_items:
+        - server 123.176.37.249 prefer iburst
+        - server 123.176.40.175 prefer iburst
+
+    - name: Restart NTP service
+      service:
+        name: ntp
+        state: restarted
+
+root@ansible:/etc/ansible# exclude_ntp_pools.yml
