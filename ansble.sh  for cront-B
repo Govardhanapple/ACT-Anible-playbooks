@@ -1,0 +1,57 @@
+root@ansible:~# ls -lh *.sh
+-rwxr-xr-x 1 root root   73 Aug  8 10:37 datecompare.sh
+-rwxr-xr-x 1 root root  112 Jun  5 10:55 df-h_backup.sh
+-rw-r--r-- 1 root root   84 Apr 22 17:32 fortigate.sh
+-rwxr-xr-x 1 root root   64 Aug 10 01:15 ntp.sh
+-rwxr-xr-x 1 root root  241 Jun  8 19:38 routes_backup.sh
+-rw-r--r-- 1 root root  104 Apr 22 17:32 rsync.sh
+-rw-r--r-- 1 root root 1.3K Apr 22 17:21 script.sh
+-rwxr-xr-x 1 root root  128 Jun  6 12:51 users_backup.sh
+-rw-r--r-- 1 root root   57 Oct 12 11:13 who.sh
+root@ansible:~#
+root@ansible:~#
+root@ansible:~# cat datecompare.sh
+#!/bin/sh
+/usr/bin/ansible-playbook /etc/ansible/datecompare_latest2.yml
+root@ansible:~#
+root@ansible:~#
+root@ansible:~# cat df-h_backup.sh
+#!/bin/sh
+/usr/bin/ansible-playbook /etc/ansible/df-h.yml
+/usr/bin/ansible-playbook /etc/ansible/alepo_df-h.yml
+root@ansible:~#
+root@ansible:~# cat ntp.sh
+#!/bin/sh
+/usr/bin/ansible-playbook /etc/ansible/ntp_status.yml
+root@ansible:~#
+root@ansible:~# cat routes_backup.sh
+#!/bin/sh
+/usr/bin/ansible-playbook /etc/ansible/routes_backup.yml
+/usr/bin/ansible-playbook /etc/ansible/ip_routes_backup.yml
+/usr/bin/ansible-playbook /etc/ansible/alepo_routes_backup.yml
+/usr/bin/ansible-playbook /etc/ansible/netstat.yml
+root@ansible:~#
+root@ansible:~# cat rsync.sh
+#!/usr/bin/expect -f
+ssh root@10.100.116.221
+expect "password:"
+send -- "$env(sandeep@68)\r"
+expect eof
+root@ansible:~#
+root@ansible:~# cat users_backup.sh
+#!/bin/sh
+/usr/bin/ansible-playbook /etc/ansible/users_backup.yml
+/usr/bin/ansible-playbook /etc/ansible/alepo_users_backup.yml
+root@ansible:~#
+
+
+root@ansible:~# crontab -l
+
+CRON_TZ=IST
+
+30 23 * * * /bin/bash /root/routes_backup.sh >> /root/routes_backup.log 2>&1
+#00 23 * * * /bin/bash /root/df-h_backup.sh >> /root/df-h_backup.log 2>&1
+00 22 * * * /bin/bash /root/users_backup.sh >> /root/users_backup.log 2>&1
+#40 10 * * * /bin/bash /root/datecompare.sh >> /root/datecompare.log 2>&1
+#21 01 * * * /bin/bash /root/ntp.sh >> /root/ntp.log 2>&1
+root@ansible:~#
