@@ -1,0 +1,19 @@
+root@ansible:/etc/ansible# cat alepo_users_backup.yml
+- name: Backup users on servers
+  hosts: alepo
+  gather_facts: yes
+  vars:
+    backup_dir: /root/users_backup/
+  tasks:
+  - name: Backup users
+    shell: cat /etc/passwd > /tmp/{{ inventory_hostname }}_users_{{ ansible_date_time.date }}.txt
+  - name: Copy users to Ubuntu server
+    fetch:
+      src: "/tmp/{{ inventory_hostname }}_users_{{ ansible_date_time.date }}.txt"
+      dest: "{{ backup_dir }}"
+      flat: yes
+  - name: Remove users file
+    file:
+      path: /tmp/{{ inventory_hostname }}_users_{{ ansible_date_time.date }}.txt
+      state: absent
+root@ansible:/etc/ansible#
