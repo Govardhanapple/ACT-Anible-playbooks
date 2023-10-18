@@ -1,0 +1,54 @@
+root@ansible:/etc/ansible# cat syslog111.55.yml
+---
+- name: Add script to rsyslog.conf
+  hosts: syslog
+  become: true
+  become_method: sudo
+  vars:
+    ansible_become_password: bgt54rfV
+  tasks:
+    - name: Backup /etc/rsyslog.conf
+      copy:
+        src: /etc/rsyslog.conf
+        dest: /etc/rsyslog.conf.bkkk
+    - name: Add configuration to rsyslog.conf
+      lineinfile:
+        path: /etc/rsyslog.conf
+        line: "{{ item }}"
+      with_items:
+        - $PreserveFQDN on
+        - "*.* @@10.100.111.55:514"
+        - $ActionQueueFileName queue
+        - $ActionQueueMaxDiskSpace 1g
+        - $ActionQueueSaveOnShutdown on
+        - $ActionQueueType LinkedList
+        - $ActionResumeRetryCount -1
+        - local2.* /var/log/bash_history.log
+        - "# Forward bash history logs to remote syslog server"
+        - local2.* @@10.100.111.55:514
+    - name: Restart rsyslog service
+      service:
+        name: rsyslog
+        state: restarted
+    - name: Backup /etc/bash.bashrc
+      copy:
+        src: /etc/bash.bashrc
+        dest: /etc/bash.bashrc.bkk
+    - name: Add Bash history logging configuration to /etc/bash.bashrc
+      lineinfile:
+        path: /etc/bash.bashrc
+        line: >
+          # Set up Bash history logging
+
+          HISTFILE=~/.bash_history
+
+          HISTTIMEFORMAT="%Y-%m-%d %T "
+
+          PROMPT_COMMAND='history -a; logger -p local2.info -t bash_history "[USER: $USER][HOST: $HOSTNAME][CMD: $(history 1 | cut -c 8-)]"'
+    - name: Source /etc/bash.bashrc
+      shell: |
+        source /etc/bash.bashrc
+      args:
+        executable: /bin/bash
+
+root@ansible:/etc/ansible#
